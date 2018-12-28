@@ -127,9 +127,18 @@ def get_constnode(tree, last_ts=False):
 
 def check_update(tree): # 使新换的参数符合限制要求
     if isinstance(tree, node):
-        if (tree.name == '/') and (tree.children[0].name == 'sum'):
+        if (tree.name == '/') and (tree.children[0].name == 'sum'): # 参数限制(1)
             tree.children[0].children[1].name = tree.children[1].name
             tree.children[0].children[1].data = tree.children[1].data
+        if tree.name == 'regbeta': # 参数限制(2)
+            if tree.children[0].name == 'mean':
+                tree.children[1].children[0].name = tree.children[0].children[1].name
+                tree.children[1].children[0].data = tree.children[0].children[1].data
+                tree.children[2].name = tree.children[0].children[1].name
+                tree.children[2].data = tree.children[0].children[1].data
+            else:
+                tree.children[2].name = tree.children[1].children[0].name
+                tree.children[2].data = tree.children[1].children[0].data
     for children in tree.children:
         check_update(children)
 
@@ -195,6 +204,7 @@ def get_tree_answer(**params):
             if count1==count2:
                 const_node.change_value((int)(params[key]))
     new_tree = copy.deepcopy(now_tree)
+    check_update(new_tree)
     ans = calculation(new_tree)[0]
     if np.isnan(ans) or np.isinf(ans):
         return 0
