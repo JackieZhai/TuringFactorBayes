@@ -528,6 +528,42 @@ class Calculator():
                 pass
             return mean_pearsonr
         
+        elif score_name == 'pearsonr_new':
+            treedata = self.tree.data.fillna(0).values
+            labeldata = self.data['label'].fillna(0).values
+            mean_pearsonr = 0
+            count = 0
+            for i in range(100, 999):
+                # 按Factor排序删除中间股票
+                new_treedata = []
+                new_labeldata = []
+                stock_len = len(treedata[i])
+                treedata_set = []
+                for j in range(stock_len):
+                    treedata_set.append((j, treedata[i][j]))
+                treedata_reset = sorted(treedata_set, key=itemgetter(1))
+                reserve_set = []
+                for j in range((int)(stock_len*0.3), (int)(stock_len*0.7)):
+                    reserve_set.append(treedata_reset[j][0])
+                for j in range(stock_len):
+                    if j not in reserve_set:
+                        new_treedata.append(treedata[i][j])
+                        new_labeldata.append(labeldata[i][j])
+                try:
+                    x = pearsonr(new_treedata, new_labeldata)
+                    if(np.isnan(x[0])):
+                        continue
+                    else:
+                        mean_pearsonr += x[0]
+                        count+=1
+                except Exception:
+                    pass
+            try:
+            	mean_pearsonr =mean_pearsonr/count
+            except Exception:
+                pass
+            return mean_pearsonr
+        
         elif score_name == 'pearsonr_new_os':
             treedata = self.tree.data.fillna(0).values
             labeldata = self.data['label'].fillna(0).values
@@ -563,7 +599,7 @@ class Calculator():
             except Exception:
                 pass
             return mean_pearsonr
-        
+
         elif score_name == 'entropy':
             topx = 20 # 表示取前几支最大return作为label=1
             treedata = self.tree.data.fillna(0).values

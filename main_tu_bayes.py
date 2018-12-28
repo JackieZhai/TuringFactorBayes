@@ -13,9 +13,9 @@ Number of Iterations: 50
 TODO:
 (√)1. 计算IC的时候，把因子算的中间(40%)的股票忽略，再和Return做IC试试
 (√)2. 去除计算时候的各种错误取值情况（NaN、INF等）
-(没思路)3. 调整一些BayesianOptimization的超参数，找到合适的初始点
+3. 调整一些BayesianOptimization的超参数，找到合适的初始点
 4. 加入样本外测试，防止过拟合
-(见calculator.py)5. 加入参数的限制（首先是要统计有哪几种限制）
+5. 加入参数的限制（首先是要统计有哪几种限制）
 """
 
 import sys
@@ -97,7 +97,6 @@ data_os = data2ztp_format(pre_data_os)
 print('Formated the data.')
 gl._init()
 gl.set_value('data', data)
-gl.set_value('data_os', data_os)
 
 def get_constnode(tree, last_ts=False):
     node_list = []
@@ -105,9 +104,8 @@ def get_constnode(tree, last_ts=False):
         if last_ts:
             # last_ts 表示上一层的节点为time series相关的节点，仅该部分节点需要调参
             if tree.data < 1:
-                # # 如果原本传入参数小于1，不对其调参
-                # tree.isTune = False
-                tree.isTune = True
+                # 如果原本传入参数小于1，不对其调参
+                tree.isTune = False
                 return []
             else:
                 tree.isTune = True
@@ -125,23 +123,6 @@ def get_constnode(tree, last_ts=False):
             result = get_constnode(children, current_ts)
             node_list.extend(result)
         return node_list
-
-def check_update(tree): # 使新换的参数符合限制要求
-    if isinstance(tree, node):
-        if (tree.name == '/') and (tree.children[0].name == 'sum'): # 参数限制(1)
-            tree.children[0].children[1].name = tree.children[1].name
-            tree.children[0].children[1].data = tree.children[1].data
-        if tree.name == 'regbeta': # 参数限制(2)
-            if isinstance(tree.children[0], node) and (tree.children[0].name == 'mean'):
-                tree.children[1].children[0].name = tree.children[0].children[1].name
-                tree.children[1].children[0].data = tree.children[0].children[1].data
-                tree.children[2].name = tree.children[0].children[1].name
-                tree.children[2].data = tree.children[0].children[1].data
-            else:
-                tree.children[2].name = tree.children[1].children[0].name
-                tree.children[2].data = tree.children[1].children[0].data
-    for children in tree.children:
-        check_update(children)
 
 def calculation(tree, verbose=0):
     data = gl.get_value('data')
@@ -170,33 +151,6 @@ def calculation(tree, verbose=0):
     except Exception:
         print(traceback.format_exc())
 
-def calculation_os(tree, verbose=0):
-    data_os = gl.get_value('data_os')
-    try:
-        start = time.clock()
-        calculator = Calculator(data_os)
-        calculated_data = calculator.calculate_features(tree)
-        end1 = time.clock()
-        # 取后面数据算皮尔森，剔除NaN，为此把get_score改了一下
-        score = calculator.get_score('pearsonr_new_os')
-        end2 = time.clock()
-        calculator.delete()
-        # pdb.set_trace()
-        del calculator # useless
-        del data_os
-        gc.collect()
-        if verbose >= 1:
-            print("The out sample is using time %fs, %fs with score %f." \
-                % (end1-start, end2-end1, score))
-        if verbose >= 2:
-            if isinstance(tree, str):
-                print("%s" % tree)
-            else:
-                print("%s" % tree_to_formula(tree))
-        return (score, tree, calculated_data)
-    except Exception:
-        print(traceback.format_exc())
-
 now_tree = formula_to_tree('(mean(close,1)/close)') # 初始化一个无关紧要的树
 def get_tree_answer(**params):
     constnode_list = get_constnode(now_tree)
@@ -205,7 +159,6 @@ def get_tree_answer(**params):
             if count1==count2:
                 const_node.change_value((int)(params[key]))
     new_tree = copy.deepcopy(now_tree)
-    check_update(new_tree)
     ans = calculation(new_tree)[0]
     if np.isnan(ans) or np.isinf(ans):
         return 0
@@ -214,7 +167,6 @@ def get_tree_answer(**params):
 
 def fine_tuning(tree, verbose=1): 
     original_score = calculation(tree)[0]
-    original_score_os = calculation_os(tree)[0]
     constnode_list = get_constnode(tree)
     constnode_num = len(constnode_list)
     
@@ -245,7 +197,6 @@ def fine_tuning(tree, verbose=1):
             if count1==count2:
                 const_node.change_value((int)(bo.res['max']['max_params'][key]))
     best_tree = copy.deepcopy(tree)
-    best_score_os = calculation_os(best_tree)[0]
     print('--------------------------------------------------------------------')
     print(' - Tuned formula:\n   %s' % tree_to_formula(best_tree, for_print=True))
     print(' + Tuned score = %.5f' % best_score)
@@ -253,10 +204,10 @@ def fine_tuning(tree, verbose=1):
     result = {
         'original_formula': tree_to_formula(now_tree), 
         'original_score_is': original_score, 
-        'original_score_os': original_score_os,
+        'original_score_os': 0,
         'tuned_formula': tree_to_formula(best_tree), 
         'tuned_score_is': best_score,
-        'tuned_score_os': best_score_os,
+        'tuned_score_os': 0
     }
     return best_tree, result
 
@@ -290,7 +241,7 @@ if __name__ == '__main__':
             result.append(tuning_result)
             # 把调好的公式写入到文件中
             with open(OUTPUT_FORMULA_FILE, 'a+') as f:
-                f.write('%s_%s_bayes @ %s \n' % (alpha_name, pool_list[pool_id], tuning_result['tuned_formula']))
+                f.write('%s_%s @ %s \n' % (alpha_name, pool_list[pool_id], tuning_result['tuned_formula']))
         except NotImplementedError as e:
             print('Failed: Not Implemented {0}\n'.format(e.args[0]))
             failure_list.loc[alpha_name, 'error'] = e.args[0]

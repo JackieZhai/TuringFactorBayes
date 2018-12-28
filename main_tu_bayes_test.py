@@ -14,7 +14,7 @@ TODO:
 (√)1. 计算IC的时候，把因子算的中间(40%)的股票忽略，再和Return做IC试试
 (√)2. 去除计算时候的各种错误取值情况（NaN、INF等）
 (没思路)3. 调整一些BayesianOptimization的超参数，找到合适的初始点
-4. 加入样本外测试，防止过拟合
+(√)4. 加入样本外测试，防止过拟合
 (见calculator.py)5. 加入参数的限制（首先是要统计有哪几种限制）
 """
 
@@ -105,9 +105,8 @@ def get_constnode(tree, last_ts=False):
         if last_ts:
             # last_ts 表示上一层的节点为time series相关的节点，仅该部分节点需要调参
             if tree.data < 1:
-                # # 如果原本传入参数小于1，不对其调参
-                # tree.isTune = False
-                tree.isTune = True
+                # 如果原本传入参数小于1，不对其调参
+                tree.isTune = False
                 return []
             else:
                 tree.isTune = True
@@ -129,19 +128,15 @@ def get_constnode(tree, last_ts=False):
 def check_update(tree): # 使新换的参数符合限制要求
     if isinstance(tree, node):
         if (tree.name == '/') and (tree.children[0].name == 'sum'): # 参数限制(1)
-            tree.children[0].children[1].name = tree.children[1].name
-            tree.children[0].children[1].data = tree.children[1].data
+            tree.children[0].children[1].change_value(tree.children[1].data)
         if tree.name == 'regbeta': # 参数限制(2)
             if tree.children[0].name == 'mean':
-                tree.children[1].children[0].name = tree.children[0].children[1].name
-                tree.children[1].children[0].data = tree.children[0].children[1].data
-                tree.children[2].name = tree.children[0].children[1].name
-                tree.children[2].data = tree.children[0].children[1].data
+                tree.children[1].children[0].change_value(tree.children[0].children[1].data)
+                tree.children[2].change_value(tree.children[0].children[1].data)
             else:
-                tree.children[2].name = tree.children[1].children[0].name
-                tree.children[2].data = tree.children[1].children[0].data
-    for children in tree.children:
-        check_update(children)
+                tree.children[2].change_value(tree.children[1].children[0].data)
+        for child in tree.children:
+            check_update(child)
 
 def calculation(tree, verbose=0):
     data = gl.get_value('data')
@@ -274,38 +269,37 @@ if __name__ == '__main__':
         f.write('')
     
     for count, expr in enumerate(formulas):
-        print(expr)
         alpha_name = expr.split('@')[0].strip()
         alpha_expr = expr.split('@')[1].strip('\n')
         # pdb.set_trace()
-        try:
-            print('> Tuning %s: ' % alpha_name)
-            tree = formula_to_tree(alpha_expr)
-            tuning_result = []
-            best_data = []
-            for i in range(times_loop):
-                tree, tuning_result = fine_tuning(tree)
-            alpha_name = 'tuned_'+alpha_name
-            tuned_formulas.append((alpha_name, tuning_result['tuned_formula']))
-            result.append(tuning_result)
-            # 把调好的公式写入到文件中
-            with open(OUTPUT_FORMULA_FILE, 'a+') as f:
-                f.write('%s_%s_bayes @ %s \n' % (alpha_name, pool_list[pool_id], tuning_result['tuned_formula']))
-        except NotImplementedError as e:
-            print('Failed: Not Implemented {0}\n'.format(e.args[0]))
-            failure_list.loc[alpha_name, 'error'] = e.args[0]
-        except AssertionError as e:
-            print('Failed: Assertation Error {0}\n'.format(e.args[0]))
-            failure_list.loc[alpha_name, 'error'] = e.args[0]
-        except ValueError as e:
-            print('Failed: Value Error {0}\n'.format(e.args[0]))
-            failure_list.loc[alpha_name, 'error'] = e.args[0]
-        except KeyboardInterrupt:
-            raise
-        except:
-            # raise
-            print('Failed: Unknown Error: %s @ %s' % (alpha_name, alpha_expr))
-            failure_list.loc[alpha_name, 'error'] = 'Unknow Error'
+        # try:
+        print('> Tuning %s: ' % alpha_name)
+        tree = formula_to_tree(alpha_expr)
+        tuning_result = []
+        best_data = []
+        for i in range(times_loop):
+            tree, tuning_result = fine_tuning(tree)
+        alpha_name = 'tuned_'+alpha_name
+        tuned_formulas.append((alpha_name, tuning_result['tuned_formula']))
+        result.append(tuning_result)
+        # 把调好的公式写入到文件中
+        with open(OUTPUT_FORMULA_FILE, 'a+') as f:
+            f.write('%s_%s_bayes @ %s \n' % (alpha_name, pool_list[pool_id], tuning_result['tuned_formula']))
+        # except NotImplementedError as e:
+        #     print('Failed: Not Implemented {0}\n'.format(e.args[0]))
+        #     failure_list.loc[alpha_name, 'error'] = e.args[0]
+        # except AssertionError as e:
+        #     print('Failed: Assertation Error {0}\n'.format(e.args[0]))
+        #     failure_list.loc[alpha_name, 'error'] = e.args[0]
+        # except ValueError as e:
+        #     print('Failed: Value Error {0}\n'.format(e.args[0]))
+        #     failure_list.loc[alpha_name, 'error'] = e.args[0]
+        # except KeyboardInterrupt:
+        #     raise
+        # except:
+        #     # raise
+        #     print('Failed: Unknown Error: %s @ %s' % (alpha_name, alpha_expr))
+        #     failure_list.loc[alpha_name, 'error'] = 'Unknow Error'
 
     pd.DataFrame(result).to_csv(OUTPUT_SCORE_FILE)
     failure_list.to_csv(OUTPUT_FAILURE_FILE)

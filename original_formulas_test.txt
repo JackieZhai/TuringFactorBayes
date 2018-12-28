@@ -1,5 +1,1 @@
-galpha004 @ ((((sum(close,8)/8)+std(close,8))<(sum(close,2)/2))?(-1*1):(((sum(close,2)/2)<((sum(close,8)/8)-std(close,8)))?1:(((1<(volume/mean(volume,20)))||((volume/mean(volume,20))==1))?1:(-1*1))))
-galpha012 @ ((rank((open-(sum(vwap,10)/10))))*(-1*(rank(abs((close-vwap))))))
-galpha021 @ regbeta(mean(close,6),sequence(6),6)
-ose))/(high-low),11,2)-sma(vol*((close-low)-(high-close))/(high-low),4,2))
-galpha116 @ regbeta(close,sequence(20),20)
+galpha110 @ (sum(max(0,high-delay(close,1)),20)/sum(max(0,delay(close,1)-low),20)*100)
