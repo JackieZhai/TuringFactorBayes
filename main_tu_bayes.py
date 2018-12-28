@@ -125,6 +125,14 @@ def get_constnode(tree, last_ts=False):
             node_list.extend(result)
         return node_list
 
+def check_update(tree): # 使新换的参数符合限制要求
+    if isinstance(tree, node):
+        if (tree.name == '/') and (tree.children[0].name == 'sum'):
+            tree.children[0].children[1].name = tree.children[1].name
+            tree.children[0].children[1].data = tree.children[1].data
+    for children in tree.children:
+        check_update(children)
+
 def calculation(tree, verbose=0):
     data = gl.get_value('data')
     try:

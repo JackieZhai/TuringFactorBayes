@@ -248,7 +248,7 @@ def formula_to_tree(formula):
 
 if __name__ == '__main__':
     print(var_names)
-    formula = '((sma(volume*((close-low)-(high-close))/(high-low),11,2)-sma(vol*((close-low)-(high-close))/(high-low),4,2)))'
+    formula = 'regbeta(mean(close,6),sequence(6),6)'
     tree = formula_to_tree(formula)
     print(tree.display())
     formula = tree_to_formula(tree)
