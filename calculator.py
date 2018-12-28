@@ -4,7 +4,7 @@ Modified on Thu Dec 13 15:49 2018
 
 TODO:
 1. 定义sum(X,N)/N中的两个N为同一个const_node
-2. 定义regebeta(X,sequence(N),N)中的两个N为同一个const_node
+2. 定义regbeta(X,sequence(N),N)中的两个N为同一个const_node
 3. 限定sma(X,N,M)中的N>M
 4. 限定std(X,N)中的N>=2
 5. 限定corr(X,N)中的N>=2
