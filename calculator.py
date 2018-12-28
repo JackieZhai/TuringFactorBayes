@@ -528,12 +528,12 @@ class Calculator():
                 pass
             return mean_pearsonr
         
-        elif score_name == 'pearsonr_new':
+        elif score_name == 'pearsonr_new_os':
             treedata = self.tree.data.fillna(0).values
             labeldata = self.data['label'].fillna(0).values
             mean_pearsonr = 0
             count = 0
-            for i in range(100, 999):
+            for i in range(len(treedata)):
                 # 按Factor排序删除中间股票
                 new_treedata = []
                 new_labeldata = []
@@ -562,31 +562,6 @@ class Calculator():
             	mean_pearsonr =mean_pearsonr/count
             except Exception:
                 pass
-            return mean_pearsonr
-
-        elif score_name == 'pearsonr_os':
-            treedata = self.tree.data.fillna(0).values
-            labeldata = self.data['label'].fillna(0).values
-            mean_pearsonr = 0
-            count = 0
-            for i in range(len(treedata)):
-                try:
-                    x = pearsonr(treedata[i],labeldata[i])
-                    if(np.isnan(x[0])):
-                        continue
-                    else:
-                        mean_pearsonr += x[0]
-                        count+=1
-                except Exception:
-                    pass
-
-#            if con.shape[0] == 0:
-#                return 0
-            try:
-            	mean_pearsonr =mean_pearsonr/count
-            except Exception:
-                pass
-#            pdb.set_trace()
             return mean_pearsonr
         
         elif score_name == 'entropy':

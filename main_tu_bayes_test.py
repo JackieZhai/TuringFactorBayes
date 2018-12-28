@@ -39,14 +39,14 @@ import pdb
 import global_list as gl
 
 # 载入公式的文件
-INPUT_FORMULA_FILE = 'original_formulas_all.txt'
+INPUT_FORMULA_FILE = 'original_formulas_test.txt'
 # 每个公式要跑几遍
 times_loop = 1
 # 选择股票池
 pool_id = '000300'
 
 pool_list = {'000001':'SHCI','000300':'hs300','000905':'zz500','000906':'zz800','399005':'SmallCap','399006':'GEMI','399106':'SZCI','399317':'ASCI'}
-OUTPUT_RESULT_DIR = './tuning_result_bayes_v1'
+OUTPUT_RESULT_DIR = './tuning_result_bayes_v2'
 OUTPUT_FORMULA_DIR = joindir(OUTPUT_RESULT_DIR, 'formula')
 OUTPUT_FORMULA_FILE = joindir(OUTPUT_FORMULA_DIR, 'tuned_formulas_bayes.txt')
 OUTPUT_DATA_DIR = joindir(OUTPUT_RESULT_DIR, 'data')
@@ -132,7 +132,7 @@ def check_update(tree): # 使新换的参数符合限制要求
             tree.children[0].children[1].name = tree.children[1].name
             tree.children[0].children[1].data = tree.children[1].data
         if tree.name == 'regbeta': # 参数限制(2)
-            if isinstance(tree.children[0], node) and (tree.children[0].name == 'mean'):
+            if tree.children[0].name == 'mean':
                 tree.children[1].children[0].name = tree.children[0].children[1].name
                 tree.children[1].children[0].data = tree.children[0].children[1].data
                 tree.children[2].name = tree.children[0].children[1].name
@@ -274,9 +274,9 @@ if __name__ == '__main__':
         f.write('')
     
     for count, expr in enumerate(formulas):
+        print(expr)
         alpha_name = expr.split('@')[0].strip()
         alpha_expr = expr.split('@')[1].strip('\n')
-        # print(alpha_expr)
         # pdb.set_trace()
         try:
             print('> Tuning %s: ' % alpha_name)
