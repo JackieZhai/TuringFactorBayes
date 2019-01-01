@@ -248,8 +248,8 @@ def formula_to_tree(formula):
 
 if __name__ == '__main__':
     print(var_names)
-    formula = 'galpha004 @ ((((sum(close,8)/8)+std(close,8))<(sum(close,2)/2))?(-1*1):(((sum(close,2)/2)<((sum(close,8)/8)-std(close,8)))?1:(((1<(volume/mean(volume,20)))||((volume/mean(volume,20))==1))?1:(-1*1))))'
+    formula = 'regbeta(close,sequence(20),20)'
     tree = formula_to_tree(formula)
     print(tree.display())
     formula = tree_to_formula(tree)
-    print(formula)
+    print('%s' % (tree_to_formula(tree, for_print=True)))

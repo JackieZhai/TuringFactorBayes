@@ -128,7 +128,7 @@ def get_constnode(tree, last_ts=False):
 def check_update(tree): # 使新换的参数符合限制要求
     if isinstance(tree, node):
         if (tree.name == '/') and (tree.children[0].name == 'sum'): # 参数限制(1)
-            tree.children[0].children[1].change_value(tree.children[1].data)
+            tree.children[1].change_value(tree.children[0].children[1].data)
         if tree.name == 'regbeta': # 参数限制(2)
             if tree.children[0].name == 'mean':
                 tree.children[1].children[0].change_value(tree.children[0].children[1].data)
@@ -200,7 +200,9 @@ def get_tree_answer(**params):
             if count1==count2:
                 const_node.change_value((int)(params[key]))
     new_tree = copy.deepcopy(now_tree)
+    print(new_tree.display())
     check_update(new_tree)
+    print(new_tree.display())
     ans = calculation(new_tree)[0]
     if np.isnan(ans) or np.isinf(ans):
         return 0
@@ -240,6 +242,7 @@ def fine_tuning(tree, verbose=1):
             if count1==count2:
                 const_node.change_value((int)(bo.res['max']['max_params'][key]))
     best_tree = copy.deepcopy(tree)
+    check_update(best_tree)
     best_score_os = calculation_os(best_tree)[0]
     print('--------------------------------------------------------------------')
     print(' - Tuned formula:\n   %s' % tree_to_formula(best_tree, for_print=True))

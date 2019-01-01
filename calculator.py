@@ -569,7 +569,7 @@ class Calculator():
             labeldata = self.data['label'].fillna(0).values
             mean_pearsonr = 0
             count = 0
-            for i in range(len(treedata)):
+            for i in range(100, 199):
                 # 按Factor排序删除中间股票
                 new_treedata = []
                 new_labeldata = []
