@@ -234,7 +234,7 @@ def fine_tuning(tree, verbose=1):
 
     bo = BayesianOptimization(get_tree_answer, constnode_list_pbound)
     bo.explore(constnode_list_pbound_ori)
-    bo.maximize(init_points=10, n_iter=100)
+    bo.maximize(init_points=10, n_iter=10)
 
     best_score = bo.res['max']['max_val']
     for count1, key in enumerate(bo.res['max']['max_params']):
