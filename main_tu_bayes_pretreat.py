@@ -35,7 +35,7 @@ import pdb
 import global_list as gl
 
 # 载入公式的文件
-INPUT_FORMULA_FILE = 'original_formulas.txt'
+INPUT_FORMULA_FILE = 'original_formulas_all_pre.txt'
 # 每个公式要跑几遍
 times_loop = 1
 # 选择股票池
@@ -206,20 +206,20 @@ def get_tree_answer(**params):
         return np.abs(ans)
 
 def fine_tuning(tree, verbose=1): 
-    original_score = calculation(tree)[0]
-    original_score_os = calculation_os(tree)[0]
+    # original_score = calculation(tree)[0]
+    # original_score_os = calculation_os(tree)[0]
     constnode_list = get_constnode(tree)
     constnode_num = len(constnode_list)
     
     print(' - There are %d parameters to be tuned in \n   %s' \
         % (constnode_num, tree_to_formula(tree, for_print=True)))
     
-    if constnode_num == 0:
-        print('Warning: There is no need to tune.')
-        return 
+    # if constnode_num == 0:
+    #     print('Warning: There is no need to tune.')
+    #     return 
 
-    global now_tree
-    now_tree = copy.deepcopy(tree)
+    # global now_tree
+    # now_tree = copy.deepcopy(tree)
 
     # constnode_list_pbound = {}
     # constnode_list_pbound_ori = {}
@@ -237,22 +237,22 @@ def fine_tuning(tree, verbose=1):
     #     for count2, const_node in enumerate(constnode_list):
     #         if count1==count2:
     #             const_node.change_value((int)(bo.res['max']['max_params'][key]))
-    best_tree = copy.deepcopy(tree)
-    check_update(best_tree)
-    best_score_os = calculation_os(best_tree)[0]
-    print('--------------------------------------------------------------------')
-    print(' - Tuned formula:\n   %s' % tree_to_formula(best_tree, for_print=True))
-    print(' + Tuned score = %.5f' % original_score)
-    print('--------------------------------------------------------------------')
+    # best_tree = copy.deepcopy(tree)
+    # check_update(best_tree)
+    # best_score_os = calculation_os(best_tree)[0]
+    # print('--------------------------------------------------------------------')
+    # print(' - Tuned formula:\n   %s' % tree_to_formula(best_tree, for_print=True))
+    # print(' + Tuned score = %.5f' % original_score)
+    # print('--------------------------------------------------------------------')
     result = {
-        'original_formula': tree_to_formula(now_tree), 
-        'original_score_is': original_score, 
-        'original_score_os': original_score_os,
-        'tuned_formula': tree_to_formula(best_tree), 
-        'tuned_score_is': original_score,
-        'tuned_score_os': best_score_os,
+        'original_formula': tree_to_formula(tree), 
+        'original_score_is': constnode_num,
+        'original_score_os': 0,
+        'tuned_formula': constnode_num,
+        'tuned_score_is': 0,
+        'tuned_score_os': 0,
     }
-    return best_tree, result
+    return tree, result
 
 
 if __name__ == '__main__':
@@ -271,34 +271,34 @@ if __name__ == '__main__':
         alpha_name = expr.split('@')[0].strip()
         alpha_expr = expr.split('@')[1].strip('\n')
         # pdb.set_trace()
-        # try:
-        print('> Tuning %s: ' % alpha_name)
-        tree = formula_to_tree(alpha_expr)
-        tuning_result = []
-        best_data = []
-        for i in range(times_loop):
-            tree, tuning_result = fine_tuning(tree)
-        alpha_name = 'tuned_'+alpha_name
-        tuned_formulas.append((alpha_name, tuning_result['tuned_formula']))
-        result.append(tuning_result)
-        # 把调好的公式写入到文件中
-        with open(OUTPUT_FORMULA_FILE, 'a+') as f:
-            f.write('%s_%s_bayes @ %s \n' % (alpha_name, pool_list[pool_id], tuning_result['tuned_formula']))
-        # except NotImplementedError as e:
-        #     print('Failed: Not Implemented {0}\n'.format(e.args[0]))
-        #     failure_list.loc[alpha_name, 'error'] = e.args[0]
-        # except AssertionError as e:
-        #     print('Failed: Assertation Error {0}\n'.format(e.args[0]))
-        #     failure_list.loc[alpha_name, 'error'] = e.args[0]
-        # except ValueError as e:
-        #     print('Failed: Value Error {0}\n'.format(e.args[0]))
-        #     failure_list.loc[alpha_name, 'error'] = e.args[0]
-        # except KeyboardInterrupt:
-        #     raise
-        # except:
-        #     # raise
-        #     print('Failed: Unknown Error: %s @ %s' % (alpha_name, alpha_expr))
-        #     failure_list.loc[alpha_name, 'error'] = 'Unknow Error'
+        try:
+            print('> Tuning %s: ' % alpha_name)
+            tree = formula_to_tree(alpha_expr)
+            tuning_result = []
+            best_data = []
+            for i in range(times_loop):
+                tree, tuning_result = fine_tuning(tree)
+            alpha_name = 'tuned_'+alpha_name
+            tuned_formulas.append((alpha_name, tuning_result['tuned_formula']))
+            result.append(tuning_result)
+            # 把调好的公式写入到文件中
+            with open(OUTPUT_FORMULA_FILE, 'a+') as f:
+                f.write('%s_%s_bayes @ %s \n' % (alpha_name, pool_list[pool_id], tuning_result['tuned_formula']))
+        except NotImplementedError as e:
+            print('Failed: Not Implemented {0}\n'.format(e.args[0]))
+            failure_list.loc[alpha_name, 'error'] = e.args[0]
+        except AssertionError as e:
+            print('Failed: Assertation Error {0}\n'.format(e.args[0]))
+            failure_list.loc[alpha_name, 'error'] = e.args[0]
+        except ValueError as e:
+            print('Failed: Value Error {0}\n'.format(e.args[0]))
+            failure_list.loc[alpha_name, 'error'] = e.args[0]
+        except KeyboardInterrupt:
+            raise
+        except:
+            # raise
+            print('Failed: Unknown Error: %s @ %s' % (alpha_name, alpha_expr))
+            failure_list.loc[alpha_name, 'error'] = 'Unknow Error'
 
     pd.DataFrame(result).to_csv(OUTPUT_SCORE_FILE)
     failure_list.to_csv(OUTPUT_FAILURE_FILE)
