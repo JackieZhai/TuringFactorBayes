@@ -146,7 +146,7 @@ def calculation(tree, verbose=0):
         calculated_data = calculator.calculate_features(tree)
         end1 = time.clock()
         # 取后面数据算皮尔森，剔除NaN，为此把get_score改了一下
-        score = calculator.get_score('pearsonr_new')
+        score = calculator.get_score('pearsonr_old')
         end2 = time.clock()
         calculator.delete()
         # pdb.set_trace()
@@ -200,9 +200,9 @@ def get_tree_answer(**params):
             if count1==count2:
                 const_node.change_value((int)(params[key]))
     new_tree = copy.deepcopy(now_tree)
-    print(new_tree.display())
+    # print(new_tree.display())
     check_update(new_tree)
-    print(new_tree.display())
+    # print(new_tree.display())
     ans = calculation(new_tree)[0]
     if np.isnan(ans) or np.isinf(ans):
         return 0

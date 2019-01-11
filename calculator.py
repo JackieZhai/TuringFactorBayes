@@ -31,6 +31,9 @@ import os
 os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
 import global_list as gl
 from operator import itemgetter
+import matplotlib as mpl
+mpl.use('Agg')
+import matplotlib.pyplot as plt
 
 # 获取列表的第二个元素
 def takeSecond(elem):
@@ -305,7 +308,7 @@ class Calculator():
 
             # by Yijie Zhang
             _rank = lambda x: (x >= (np.array(x))[-1]).sum() / float(x.shape[0])
-#            pdb.set_trace()
+
             return ops[0].rolling(self._to_int(ops[1]),min_periods=1).apply(_rank)
         
         elif tree.name == 'scale':
@@ -512,6 +515,19 @@ class Calculator():
             mean_pearsonr = 0
             count = 0
             # for i in range(len(treedata)):
+            # yaxis = np.array(treedata)
+            # yaxis = yaxis[:, 100]
+            # xaxis = len(yaxis)
+            # xaxis = range(xaxis)
+            # plt.plot(xaxis, yaxis)
+            # plt.savefig('treedata.jpg')
+            # yaxis = np.array(labeldata)
+            # yaxis = yaxis[:, 100]
+            # xaxis = len(yaxis)
+            # xaxis = range(xaxis)
+            # plt.plot(xaxis, yaxis)
+            # plt.savefig('labeldata.jpg')
+            # print('OK')
             for i in range(100, 999):
                 try:
                     x = pearsonr(treedata[i],labeldata[i])
