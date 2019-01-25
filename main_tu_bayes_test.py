@@ -146,7 +146,7 @@ def calculation(tree, verbose=0):
         calculated_data = calculator.calculate_features(tree)
         end1 = time.clock()
         # 取后面数据算皮尔森，剔除NaN，为此把get_score改了一下
-        score = calculator.get_score('pearsonr_old')
+        score = calculator.get_score('pearsonr_dropout')
         end2 = time.clock()
         calculator.delete()
         # pdb.set_trace()

@@ -544,6 +544,36 @@ class Calculator():
                 pass
             return mean_pearsonr
         
+        elif score_name == 'pearsonr_dropout':
+            treedata = self.tree.data.fillna(0).values
+            labeldata = self.data['label'].fillna(0).values
+            mean_pearsonr = 0
+            count = 0
+            # 先对treedata在时序上做一个尖刺的剔除
+            treedata = np.array(treedata)
+            edge_rate = 0.005
+            for j in range(len(treedata[0])):
+                for i in range(len(treedata)-2):
+                    onedot = treedata[i][j]
+                    twodot = treedata[i+1][j]
+                    threedot = treedata[i+2][j]
+                    if (onedot<twodot) and (twodot>threedot) and (twodot-onedot>edge_rate) and (twodot-threedot>edge_rate):
+                        treedata[i+1][j] = (onedot+threedot)/2
+                    elif (onedot>twodot) and (twodot<threedot) and (onedot-twodot>edge_rate) and (threedot-twodot>edge_rate):
+                        treedata[i+1][j] = (onedot+threedot)/2
+            yaxis = np.array(treedata)
+            yaxis = yaxis[:, 100]
+            xaxis = len(yaxis)
+            xaxis = range(xaxis)
+            plt.plot(xaxis, yaxis)
+            plt.savefig('treedata.jpg')
+            for i in range(100, 999):
+                x = pearsonr(treedata[i],labeldata[i])
+                mean_pearsonr += x[0]
+                count+=1
+            mean_pearsonr = mean_pearsonr/count
+            return mean_pearsonr
+
         elif score_name == 'pearsonr_new':
             treedata = self.tree.data.fillna(0).values
             labeldata = self.data['label'].fillna(0).values
